@@ -21,6 +21,7 @@ function _update()
 end
 
 function _draw()
+	cls(15)
 	grid.draw()
 end
 -->8
@@ -47,7 +48,6 @@ grid.new = {
 {0,0,0,0}
 }
 
-
 grid.speed = {
 {0,0,0,0},
 {0,0,0,0},
@@ -58,7 +58,8 @@ grid.speed = {
 
 
 tile_size = 10
-grid_thickness = 2
+grid_thickness = 8
+move_dist = tile_size + grid_thickness
 play_dimension = tile_size*4 +
  grid_thickness*5
 
@@ -66,45 +67,41 @@ left_edge = flr((128 - play_dimension)/2)
 top_edge = flr((128 - play_dimension)/2)
 
 grid.init = function(self)
-	print("grid init")
-	print(grid.table[1][1])
-	print(grid.table[4][4])
+	//print("grid init")
+	//print(grid.table[1][1])
+	//print(grid.table[4][4])
+	spawn(grid)
+	spawn(grid)
+	spawn(grid)
 	spawn(grid)
 	spawn(grid)
 end
 
 grid.update = function(self)
-	if btn(0) then
-		print("shift left")
-		debug_draw(grid.table)
-		shift_left(grid)
-		debug_draw(grid.table)
-		
-	elseif btn(1) then
-		print("shift right")
-		debug_draw(grid.table)
-		shift_right(grid)
-		debug_draw(grid.table)
-		
-	elseif btn(2) then
-		print("shift up")
-		debug_draw(grid.table)
-		shift_up(grid)
-		debug_draw(grid.table)
-		
-	elseif btn(3) then
-		print("shift down")
-		debug_draw(grid.table)
-		shift_down(grid)
-		debug_draw(grid.table)
+	if not moving then
+		if btn(0) then
+			shift_left(grid)
+			shift_direction = {-1,0}
+			
+		elseif btn(1) then
+			//print("shift right")
+			//debug_draw(grid.table)
+			shift_right(grid)
+			shift_direction = {1,0}
+			debug_draw(grid.table)
+			debug_draw(grid.new)
+			debug_draw(grid.speed)
+			
+		elseif btn(2) then
+			shift_up(grid)
+			shift_direction = {0,-1}
+			
+		elseif btn(3) then
+			shift_down(grid)
+			shift_direction = {0,1}
+		end
 	end
-	
-	if(btn(0)
-		or btn(1)
-		or btn(2)
-		or btn(3)) then
-		spawn(grid)
-	end
+	handle_movement()
 end
 
 
@@ -134,12 +131,19 @@ grid.draw = function(self)
 			if grid.table[y][x] != 0 then
 				col = grid.table[y][x]
 				tile = grid.table[y][x]
+				
 				x_pos = left_edge +
 				 (x-1) * tile_size +
-				 (x-1)*grid_thickness
+				 (x-1)*grid_thickness +
+				 grid.speed[y][x] *
+				 shift_direction[1]*grid.offset
+				 
 				y_pos = top_edge +
 					(y-1) * tile_size +
-					(y-1) * grid_thickness
+					(y-1) * grid_thickness +
+					grid.speed[y][x]*
+					shift_direction[2]*grid.offset
+		
 				rectfill(
 				x_pos,
 				y_pos,
@@ -170,11 +174,24 @@ function grid_copy(from, to)
 		end
 	end
 end
+
+function is_grid_diff (old,new)
+	if type(old) == 'table' and type(new) == 'table' then
+		for y=1,4,1 do
+			for x =1,4,1 do
+				if old[y][x] != new[y][x] then
+					return true
+				end
+			end
+		end
+	end
+	return false
+end
+			
 -->8
 function shift_left(grid)
 	grid_copy(grid.blank,grid.speed)
 	for y = 1,4,1 do
-	
 		strip = {}
 		for x = 1,4,1 do
 			add(strip,grid.table[y][x])
@@ -183,6 +200,8 @@ function shift_left(grid)
 		res = shift(strip)
 		shifted = res[1]
 		speed = res[2]
+		
+		
 		
 		for x = 1,4,1 do
 			//print(shifted[x])
@@ -191,11 +210,18 @@ function shift_left(grid)
 			grid.speed[y][x] = speed[index]
 		end
 		
+		//print("debug")
 	end
-	//debug_draw(grid.new)
 	
-	grid_copy(grid.new, grid.table)
-	grid_copy(grid.blank, grid.new)
+	//debug_draw(grid.table)
+	//debug_draw(grid.new)
+	//print("debug")
+	
+	if is_grid_diff(grid.table, grid.new) then
+		start_moving = true
+	else
+		grid_copy(grid.blank, grid.new)
+	end
 end
 		
 function shift_right(grid)
@@ -204,7 +230,7 @@ function shift_right(grid)
 	for y = 1,4,1 do
 	
 		strip = {}
-		for x = 1,4,1 do
+		for x = 4,1,-1 do
 			add(strip,grid.table[y][x])
 		end
 		
@@ -212,16 +238,18 @@ function shift_right(grid)
 		shifted = res[1]
 		speed = res[2]
 		
-		for x = 1,4,1 do
+		for x = 4,1,-1 do
 			index = 5-x
 			grid.new[y][x] = shifted[index]
 			grid.speed[y][x] = speed[index]
 		end
-		
-		
 	end
-	grid_copy(grid.new, grid.table)
-	grid_copy(grid.blank, grid.new)
+
+	if is_grid_diff(grid.table, grid.new) then
+		start_moving = true
+	else
+		grid_copy(grid.blank, grid.new)
+	end
 end
 
 		
@@ -247,8 +275,11 @@ function shift_up(grid)
 		end
 		
 	end
-	grid_copy(grid.new, grid.table)
-	grid_copy(grid.blank, grid.new)
+	if is_grid_diff(grid.table, grid.new) then
+		start_moving = true
+	else
+		grid_copy(grid.blank, grid.new)
+	end
 end
 		
 
@@ -273,20 +304,18 @@ function shift_down(grid)
 		end
 		
 	end
-	grid_copy(grid.new, grid.table)
-	grid_copy(grid.blank, grid.new)
+	
+	if is_grid_diff(grid.table, grid.new) then
+		start_moving = true
+	else
+		grid_copy(grid.blank, grid.new)
+	end
 end
-		
--->8
+
 function shift(strip)
 	shifted = {}
 	speed = {}
 	buffer = 0
-	
-	for i=1,4,1 do 
-		//print(strip[i])
-	end
-	
 	
 	for i=1,4,1 do
 	
@@ -294,21 +323,21 @@ function shift(strip)
 		if (buffer == 0 and val != 0)
 			then
 			buffer = val
-			//add(speed, i-count(shifted))
+			add(speed, i-count(shifted)-1)
 			
 		else
 			if val == 0 then
-				//add(speed,0)
+				add(speed,0)
 			elseif val == buffer then
 				add(shifted, buffer+1)
 				buffer = 0
 				add(speed,i - 
-					count(shifted)+1)
+					count(shifted))
 			else
 				add(shifted, buffer)
 				buffer = val
 				add(speed, i -
-					count(shifted)+1)
+					count(shifted)-1)
 			end
 		end
 	end
@@ -321,6 +350,63 @@ function shift(strip)
 	end
 	
 	return {shifted, speed}
+end
+-->8
+moving = false
+start_moving = false
+shift_direction = {0,0}
+grid.offset = 0
+grid.timer = 0
+grid.clock = 10
+
+
+print(moving)
+
+function handle_movement()
+	if start_moving then
+		moving = true
+		start_moving = false
+		grid.timer = 0
+	end
+	
+	if moving then
+		grid.timer += 1
+		grid.offset = flr(
+			move_dist* (grid.timer/grid.clock)
+			)
+		
+		if grid.timer/grid.clock > 1 then
+			
+			//check game is over
+			//game_over = is_game_over()
+			
+			if is_game_over() then
+				print("gg nerd")
+			else
+				spawn(grid)
+			end
+			//
+			grid_copy(grid.blank, grid.speed)
+			grid_copy(grid.new, grid.table)
+			grid_copy(grid.blank,grid.new)
+			moving = false
+			grid.timer = 0
+		end
+		
+	end
+end
+		
+	
+function is_game_over()
+	for y=1,4,1 do
+		for x=1,4,1 do
+			if grid.table[y][x] == 0 then
+				return false
+			end
+		end
+	end
+	return true
+	
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
