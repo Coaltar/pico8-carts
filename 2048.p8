@@ -57,8 +57,8 @@ grid.speed = {
 
 
 
-tile_size = 10
-grid_thickness = 8
+tile_size = 8
+grid_thickness = 4
 move_dist = tile_size + grid_thickness
 play_dimension = tile_size*4 +
  grid_thickness*5
@@ -129,7 +129,7 @@ grid.draw = function(self)
 	for y=1,4,1 do
 		for x=1,4,1 do
 			if grid.table[y][x] != 0 then
-				col = grid.table[y][x]
+				level = grid.table[y][x]
 				tile = grid.table[y][x]
 				
 				x_pos = left_edge +
@@ -144,12 +144,19 @@ grid.draw = function(self)
 					grid.speed[y][x]*
 					shift_direction[2]*grid.offset
 		
-				rectfill(
+				spr_index = level + 16
+				
+				//rectfill(
+				//x_pos,
+				//y_pos,
+				//x_pos+tile_size,
+				//y_pos+tile_size,
+				//level)
+				
+				spr(
+				spr_index,
 				x_pos,
-				y_pos,
-				x_pos+tile_size,
-				y_pos+tile_size,
-				col)
+				y_pos)
 			end
 		end
 	end
@@ -357,7 +364,7 @@ start_moving = false
 shift_direction = {0,0}
 grid.offset = 0
 grid.timer = 0
-grid.clock = 10
+grid.clock = 4
 
 
 print(moving)
@@ -389,8 +396,10 @@ function handle_movement()
 			grid_copy(grid.blank, grid.speed)
 			grid_copy(grid.new, grid.table)
 			grid_copy(grid.blank,grid.new)
+			shift_direction ={0,0}
 			moving = false
 			grid.timer = 0
+			spawn(grid)
 		end
 		
 	end
@@ -415,3 +424,13 @@ __gfx__
 00077000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00077000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00700700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+ddddddddddddddddccccccccccccccccdddddddd8888888888888888ddddddddaaaaaaaaaaaaaaaaddddddddbbbbbbbbbbbbbbbbdddddddd7777777777777777
+ddddddddddddddddcddddddccddccddcdddddddd8dddddd88dd88dd8ddddddddaddddddaaddaaddaddddddddbddddddbbddbbddbdddddddd7dddddd77dd77dd7
+ddddddddddddddddcddddddccddccddcdddddddd8dddddd88dd88dd8ddddddddaddddddaaddaaddaddddddddbddddddbbddbbddbdddddddd7dddddd77dd77dd7
+dddddddddddccdddcddccddcccccccccddd88ddd8dd88dd888888888dddaadddaddaaddaaaaaaaaadddbbdddbddbbddbbbbbbbbbddd77ddd7dd77dd777777777
+dddddddddddccdddcddccddcccccccccddd88ddd8dd88dd888888888dddaadddaddaaddaaaaaaaaadddbbdddbddbbddbbbbbbbbbddd77ddd7dd77dd777777777
+ddddddddddddddddcddddddccddccddcdddddddd8dddddd88dd88dd8ddddddddaddddddaaddaaddaddddddddbddddddbbddbbddbdddddddd7dddddd77dd77dd7
+ddddddddddddddddcddddddccddccddcdddddddd8dddddd88dd88dd8ddddddddaddddddaaddaaddaddddddddbddddddbbddbbddbdddddddd7dddddd77dd77dd7
+ddddddddddddddddccccccccccccccccdddddddd8888888888888888ddddddddaaaaaaaaaaaaaaaaddddddddbbbbbbbbbbbbbbbbdddddddd7777777777777777
